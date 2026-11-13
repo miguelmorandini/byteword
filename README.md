@@ -1,6 +1,13 @@
 # ⚡ ByteWord: dbt Core + DuckDB + Streamlit
 
-Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a ponta, desenvolvida para demonstrar o poder e as melhores práticas do ecossistema de **Modern Data Stack** local: **dbt Core**, **DuckDB** e **Streamlit**.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://byte-word.streamlit.app/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![dbt-core](https://img.shields.io/badge/dbt--core-1.8+-orange.svg)](https://www.getdbt.com/)
+[![DuckDB](https://img.shields.io/badge/DuckDB-1.1+-yellow.svg)](https://duckdb.org/)
+
+> 🎮 **Acesse a aplicação ao vivo:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
+
+Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a ponta, desenvolvida para demonstrar o poder e as melhores práticas do ecossistema de **Modern Data Stack** local e em nuvem: **dbt Core**, **DuckDB** e **Streamlit**.
 
 ---
 
@@ -54,13 +61,18 @@ flowchart TD
 
 ```text
 dbt/
-├── app.py                      # Aplicação Streamlit (Jogo + Leaderboard + Painel dbt)
+├── app.py                      # Aplicação Streamlit (Jogo + Hall da Fama)
 ├── db.py                       # Conexão e gerenciamento DuckDB otimizado para concorrência
+├── words_validator.py          # Validação multilíngue de dicionário (EN e PT-BR)
 ├── seed_data.py                # Gerador de partidas sintéticas para inicializar o ambiente
 ├── requirements.txt            # Dependências Python
-├── README.md                   # Documentação executiva e roteiro de apresentação
+├── README.md                   # Documentação executiva
+├── assets/
+│   └── logo.png                # Logo oficial do ByteWord
 ├── data/
-│   └── byteword.duckdb         # Banco analítico DuckDB compartilhado
+│   ├── byteword.duckdb         # Banco analítico DuckDB compartilhado
+│   └── valid_words.txt         # Dicionário de termos válidos
+├── byteword_component/         # Componente web interativo (tabuleiro e teclado físico/virtual)
 └── analytics_dbt/              # Projeto dbt Core
     ├── dbt_project.yml         # Configurações do projeto e materializações
     ├── profiles.yml            # Adapter DuckDB com suporte a variáveis de ambiente
@@ -84,7 +96,7 @@ dbt/
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🚀 Como Executar Localmente
 
 ### 1. Criar o Ambiente Virtual e Instalar Dependências
 ```powershell
@@ -94,7 +106,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Popular os Dados Iniciais
-Para que a apresentação comece já com histórico de partidas e jogadores:
+Para que o ambiente inicie já com histórico de partidas e jogadores:
 ```powershell
 python seed_data.py
 ```
@@ -113,28 +125,23 @@ streamlit run app.py
 
 ---
 
-## 🌐 Como Publicar no GitHub e Fazer o Deploy
+## 🌐 Deploy em Produção
 
-O projeto já está com o repositório Git local inicializado e pronto para publicação.
+A aplicação completa está implantada e disponível publicamente no **Streamlit Community Cloud**:
 
-### 1. Conectar ao seu GitHub
-Crie um repositório vazio no seu GitHub (ex: `byteword`) e execute:
-```powershell
-git remote add origin https://github.com/SEU_USUARIO/byteword.git
-git push -u origin main
-```
+🔗 **URL da Aplicação:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
 
-### 2. Deploy no GitHub Pages (Versão Showcase Estática)
-O projeto conta com o workflow automatizado [`.github/workflows/deploy_pages.yml`](.github/workflows/deploy_pages.yml) e a página estática em `docs/index.html`.
-- No seu repositório no GitHub, acesse **Settings** > **Pages**.
-- Em **Build and deployment** > **Source**, selecione **GitHub Actions** (ou **Deploy from a branch** > branch `main` / pasta `/docs`).
-- O GitHub Actions fará o build automaticamente e disponibilizará o jogo online em:  
-  `https://SEU_USUARIO.github.io/byteword/`
+O deploy é sincronizado automaticamente com os commits da branch `main` deste repositório GitHub. Toda a suíte (frontend interativo em Streamlit, persistência colunar DuckDB e transformações dbt Core) roda de ponta a ponta na nuvem com zero custo de infraestrutura.
 
-### 3. Deploy da Aplicação Completa no Streamlit Community Cloud (Gratuito)
-Como o Streamlit + DuckDB + dbt utiliza Python no backend, o deploy oficial recomendado é o **Streamlit Community Cloud**:
-1. Acesse [share.streamlit.io](https://share.streamlit.io/) e faça login com sua conta do GitHub.
-2. Clique em **"New app"**.
-3. Selecione o repositório `byteword`, branch `main` e o arquivo principal `app.py`.
-4. Clique em **"Deploy!"**.
-5. Em menos de 2 minutos sua aplicação com DuckDB, dbt e Streamlit estará pública em uma URL HTTPS acessível de qualquer dispositivo.
+---
+
+## 📋 Configuração Recomendada para o GitHub (About)
+
+Para configurar o cabeçalho e a barra lateral do repositório no GitHub:
+
+- **Description:**  
+  `🎮 Wordle-style tech game powered by Streamlit, DuckDB, and an end-to-end dbt Core analytical pipeline (ELT, Jinja macros, ranking marts & data quality tests).`
+- **Website:**  
+  `https://byte-word.streamlit.app/`
+- **Topics (Tags):**  
+  `dbt`, `duckdb`, `streamlit`, `data-engineering`, `analytics-engineering`, `modern-data-stack`, `wordle`, `game-analytics`, `python`
