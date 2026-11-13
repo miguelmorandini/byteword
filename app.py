@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 
 import db
 from seed_data import TECH_WORDS, seed_database
+from words_validator import is_valid_word
 
 # Configuração da página Streamlit
 st.set_page_config(
@@ -290,7 +291,7 @@ with tab_game:
             st.session_state.last_processed_timestamp = component_val["timestamp"]
             new_guess = component_val.get("word", "").strip().upper()
 
-            if len(new_guess) == 5 and new_guess.isalpha():
+            if len(new_guess) == 5 and new_guess.isalpha() and is_valid_word(new_guess):
                 st.session_state.attempts.append(new_guess)
 
                 if new_guess == target:

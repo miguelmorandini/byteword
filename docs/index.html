@@ -327,6 +327,7 @@
   </div>
 </div>
 
+<script src="words.js"></script>
 <script>
 const TECH_WORDS = [
   "QUERY", "TABLE", "INDEX", "SPARK", "CLOUD",
@@ -511,8 +512,19 @@ function handleInput(key) {
     }
   } else if (key === "ENTER" || key === "Enter") {
     const word = currentLetters.join("").trim().toUpperCase();
-    if (word.length === 5 && /^[A-Z]{5}$/.test(word)) {
-      const ev = evaluateGuess(word, targetWord);
+    if (word.length !== 5 || !/^[A-Z]{5}$/.test(word)) {
+      shakeRow(attempts.length);
+      showToast("Apenas palavras de 5 letras!");
+      return;
+    }
+
+    if (typeof VALID_WORDS !== "undefined" && !VALID_WORDS.has(word)) {
+      shakeRow(attempts.length);
+      showToast("Palavra não reconhecida (EN / PT-BR)!");
+      return;
+    }
+
+    const ev = evaluateGuess(word, targetWord);
       attempts.push(word);
       evaluations.push(ev);
 

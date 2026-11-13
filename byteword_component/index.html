@@ -223,6 +223,7 @@
   <div class="keyboard" id="keyboard"></div>
 </div>
 
+<script src="words.js"></script>
 <script>
 // Streamlit messaging helper
 function sendMessageToStreamlit(type, data = {}) {
@@ -418,20 +419,28 @@ function handleInput(key) {
 
     const wordToSend = state.currentLetters.join("").trim().toUpperCase();
 
-    if (wordToSend.length === 5 && /^[A-Z]{5}$/.test(wordToSend)) {
-      state.isSubmitting = true;
-      setComponentValue({
-        word: wordToSend,
-        timestamp: Date.now()
-      });
-      // Destrava de segurança caso o Streamlit demore mais de 3.5s
-      setTimeout(() => {
-        state.isSubmitting = false;
-      }, 3500);
-    } else {
+    if (wordToSend.length !== 5 || !/^[A-Z]{5}$/.test(wordToSend)) {
       shakeRow(activeRowIdx);
       showToast("Apenas palavras de 5 letras!");
+      return;
     }
+
+    // Validação estrita: aceita apenas palavras reais em Inglês ou Português (PT-BR)
+    if (typeof VALID_WORDS !== "undefined" && !VALID_WORDS.has(wordToSend)) {
+      shakeRow(activeRowIdx);
+      showToast("Palavra não reconhecida (EN / PT-BR)!");
+      return;
+    }
+
+    state.isSubmitting = true;
+    setComponentValue({
+      word: wordToSend,
+      timestamp: Date.now()
+    });
+    // Destrava de segurança caso o Streamlit demore mais de 3.5s
+    setTimeout(() => {
+      state.isSubmitting = false;
+    }, 3500);
   } else if (/^[a-zA-Z]$/.test(key)) {
     if (state.isSubmitting) return;
 
