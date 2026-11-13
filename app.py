@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import subprocess
+import threading
 import random
 from datetime import datetime
 from pathlib import Path
@@ -43,19 +44,24 @@ def run_dbt(args):
     cmd += ["--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)]
     return subprocess.run(cmd, capture_output=True, text=True, env=env)
 
+def update_dbt_marts_async():
+    """Atualiza os marts do dbt em segundo plano sem bloquear a interface nem atrasar balões."""
+    run_dbt(["run", "--select", "fct_games dim_players_ranking dim_words_difficulty"])
+
 def auto_bootstrap():
-    """Garante que na primeira execução (local ou Streamlit Cloud) o banco já tenha dados e marts prontos."""
+    """Garante que o banco tenha apenas jogadores reais e o rival fictício anti-shavraul."""
     db.init_db()
     needs_seed = False
     try:
-        df_games = db.query_df("SELECT count(*) as cnt FROM raw_games")
-        if df_games.empty or df_games.iloc[0]["cnt"] == 0:
+        df_rival = db.query_df("SELECT count(*) as cnt FROM raw_players WHERE lower(nickname) = 'anti-shavraul'")
+        if df_rival.empty or df_rival.iloc[0]["cnt"] == 0:
             needs_seed = True
     except Exception:
         needs_seed = True
 
     if needs_seed:
-        seed_database(num_games_per_player=4)
+        from seed_data import seed_anti_shavraul
+        seed_anti_shavraul(num_games=5)
         run_dbt(["build"])
     elif not db.table_exists("dim_players_ranking"):
         run_dbt(["build"])
@@ -311,8 +317,8 @@ with tab_game:
                         started_at=st.session_state.game_started_at,
                         ended_at=datetime.now()
                     )
-                    # Atualiza os Marts do dbt automaticamente para o ranking refletir em tempo real
-                    run_dbt(["run", "--select", "fct_games dim_players_ranking dim_words_difficulty"])
+                    # Atualiza os Marts do dbt em segundo plano para liberar os balões instantaneamente
+                    threading.Thread(target=update_dbt_marts_async, daemon=True).start()
                 st.rerun()
 
         # Mensagens de Fim de Jogo (alinhadas ao tamanho do jogo)
@@ -458,13 +464,15 @@ with tab_dbt:
     with col_btn2:
         run_test = st.button("🧪 Executar `dbt test`", width="stretch")
     with col_btn3:
-        seed_btn = st.button("🌱 Popular Dados Sintéticos", width="stretch")
+        seed_btn = st.button("🌱 Resetar Rival `anti-shavraul`", width="stretch")
 
     if seed_btn:
-        with st.spinner("Gerando partidas sintéticas no DuckDB..."):
-            from seed_data import seed_database
-            seed_database(num_games_per_player=5)
-            st.success("Histórico populado com sucesso! Agora execute `dbt build`.")
+        with st.spinner("Configurando histórico do rival anti-shavraul..."):
+            from seed_data import seed_anti_shavraul
+            seed_anti_shavraul(num_games=5)
+            run_dbt(["build"])
+            st.success("Rival anti-shavraul configurado! O ranking contém apenas jogadores reais e o anti-shavraul.")
+            st.rerun()
 
     if run_build or run_test:
         cmd = ["build"] if run_build else ["test"]

@@ -1,7 +1,7 @@
 """
 Script gerador de partidas sintéticas para ByteWord.
-Popula data/byteword.duckdb com histórico realista de jogadores e partidas
-para que o painel e o Leaderboard já iniciem com dados prontos para apresentação.
+Popula data/byteword.duckdb com o histórico do único rival fictício 'anti-shavraul',
+garantindo que o ranking contenha exclusivamente jogadores reais e o 'anti-shavraul'.
 """
 
 import random
@@ -15,13 +15,36 @@ TECH_WORDS = [
     "FETCH", "PARSE", "GRAPH", "CACHE", "SHARD"
 ]
 
-PLAYERS = [
-    {"nickname": "Carla_DBA", "skill": 0.90, "speed": 40},
-    {"nickname": "Ana_DataEng", "skill": 0.85, "speed": 55},
-    {"nickname": "Diego_DevOps", "skill": 0.70, "speed": 35},
-    {"nickname": "Elena_DataScientist", "skill": 0.75, "speed": 70},
-    {"nickname": "Bruno_Analytics", "skill": 0.60, "speed": 90},
-]
+RIVAL_NICKNAME = "anti-shavraul"
+
+def clean_old_dummy_players():
+    """Remove jogadores fictícios antigos gerados anteriormente, preservando jogadores reais."""
+    old_dummies = [
+        "carla_dba", "ana_dataeng", "diego_devops", 
+        "elena_datascientist", "bruno_analytics", "hacker_invalido",
+        "player_tech"
+    ]
+    with get_connection() as conn:
+        placeholders = ",".join(["?"] * len(old_dummies))
+        rows = conn.execute(
+            f"SELECT id FROM raw_players WHERE lower(nickname) IN ({placeholders})", 
+            old_dummies
+        ).fetchall()
+        pids = [r[0] for r in rows]
+
+        if pids:
+            p_placeholders = ",".join(["?"] * len(pids))
+            g_rows = conn.execute(
+                f"SELECT id FROM raw_games WHERE player_id IN ({p_placeholders})",
+                pids
+            ).fetchall()
+            gids = [r[0] for r in g_rows]
+
+            if gids:
+                g_placeholders = ",".join(["?"] * len(gids))
+                conn.execute(f"DELETE FROM raw_guesses WHERE game_id IN ({g_placeholders})", gids)
+                conn.execute(f"DELETE FROM raw_games WHERE player_id IN ({p_placeholders})", pids)
+            conn.execute(f"DELETE FROM raw_players WHERE id IN ({p_placeholders})", pids)
 
 def generate_guesses_for_game(target: str, is_won: bool, attempts_count: int):
     guesses = []
@@ -35,45 +58,51 @@ def generate_guesses_for_game(target: str, is_won: bool, attempts_count: int):
             guesses.append(pool[i % len(pool)])
     return guesses
 
-def seed_database(num_games_per_player: int = 6):
-    print("Iniciando geração de dados sintéticos para DuckDB...")
+def seed_anti_shavraul(num_games: int = 5):
+    """
+    Gera o histórico do rival fictício anti-shavraul e remove quaisquer bots legados.
+    """
     init_db()
+    clean_old_dummy_players()
 
-    # Base time: 5 days ago
-    start_base = datetime.now() - timedelta(days=5)
-    total_generated = 0
+    with get_connection() as conn:
+        res = conn.execute(
+            "SELECT count(*) FROM raw_games g JOIN raw_players p ON g.player_id = p.id WHERE lower(p.nickname) = ?",
+            [RIVAL_NICKNAME.lower()]
+        ).fetchone()
+        if res and res[0] >= num_games:
+            print(f"Rival {RIVAL_NICKNAME} já possui {res[0]} partidas registradas.")
+            return
 
-    for p_info in PLAYERS:
-        player_id = get_or_create_player(p_info["nickname"])
-        current_time = start_base + timedelta(hours=random.randint(1, 10))
+    player_id = get_or_create_player(RIVAL_NICKNAME)
+    start_base = datetime.now() - timedelta(days=3)
 
-        for _ in range(num_games_per_player):
-            target = random.choice(TECH_WORDS)
-            is_won = random.random() < p_info["skill"]
+    scenarios = [
+        {"target": "QUERY", "won": True, "attempts": 3, "duration": 34},
+        {"target": "SPARK", "won": True, "attempts": 4, "duration": 48},
+        {"target": "CLOUD", "won": True, "attempts": 3, "duration": 29},
+        {"target": "KAFKA", "won": False, "attempts": 6, "duration": 65},
+        {"target": "INDEX", "won": True, "attempts": 4, "duration": 42},
+    ]
 
-            if is_won:
-                # 1 to 6 attempts, weighted towards 3-4
-                attempts_count = random.choices([1, 2, 3, 4, 5, 6], weights=[2, 10, 35, 30, 15, 8])[0]
-            else:
-                attempts_count = 6
+    for idx, s in enumerate(scenarios[:num_games]):
+        game_start = start_base + timedelta(hours=idx * 12)
+        game_end = game_start + timedelta(seconds=s["duration"])
+        guesses = generate_guesses_for_game(s["target"], s["won"], s["attempts"])
+        record_game(
+            player_id=player_id,
+            target_word=s["target"],
+            is_won=s["won"],
+            attempts=guesses,
+            started_at=game_start,
+            ended_at=game_end
+        )
 
-            duration = max(12, int(random.gauss(p_info["speed"], 15)))
-            game_start = current_time
-            game_end = game_start + timedelta(seconds=duration)
+    print(f"Sucesso! Partidas do rival fictício '{RIVAL_NICKNAME}' configuradas em data/byteword.duckdb.")
 
-            guesses = generate_guesses_for_game(target, is_won, attempts_count)
-            record_game(
-                player_id=player_id,
-                target_word=target,
-                is_won=is_won,
-                attempts=guesses,
-                started_at=game_start,
-                ended_at=game_end
-            )
-            total_generated += 1
-            current_time = game_end + timedelta(hours=random.randint(2, 14))
-
-    print(f"Sucesso! {total_generated} partidas sintéticas geradas em data/byteword.duckdb.")
+def seed_database(num_games_per_player: int = 5):
+    """Função padrão chamada na inicialização."""
+    seed_anti_shavraul(num_games=num_games_per_player)
 
 if __name__ == "__main__":
     seed_database()
