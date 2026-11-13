@@ -257,7 +257,9 @@ let state = {
   // Letras da linha ativa divididas em 5 posições individuais
   currentLetters: ["", "", "", "", ""],
   // Índice da coluna atualmente selecionada (0 a 4)
-  selectedCol: 0
+  selectedCol: 0,
+  // Trava anti-spam para envios do Enter
+  isSubmitting: false
 };
 
 function showToast(msg) {
@@ -278,8 +280,8 @@ function shakeRow(rowIdx) {
 }
 
 function selectColumn(colIdx) {
-  if (state.gameOver) return;
-  state.selectedCol = colIdx;
+  if (state.gameOver || state.isSubmitting) return;
+  state.selectedCol = Math.max(0, Math.min(4, colIdx));
   renderBoard();
 }
 
@@ -323,8 +325,11 @@ function renderBoard() {
         tile.className = classes.join(" ");
         tile.innerText = char;
 
-        // Permite clicar em qualquer uma das 5 casas da linha para posicionar o cursor!
-        tile.addEventListener("pointerdown", ((colIndex) => {
+        // Suporte confiável para clique de mouse físico e toque
+        tile.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+        });
+        tile.addEventListener("click", ((colIndex) => {
           return (e) => {
             e.preventDefault();
             selectColumn(colIndex);
@@ -373,8 +378,11 @@ function renderKeyboard() {
         }
       }
 
-      // Usa pointerdown para resposta instantânea ao toque/clique sem atraso
-      btn.addEventListener("pointerdown", (e) => {
+      // Suporte completo a mouse físico, touchpad e telas de toque
+      btn.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Impede perda de foco e seleção de texto
+      });
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
         handleInput(key);
       });
@@ -393,6 +401,8 @@ function handleInput(key) {
   if (activeRowIdx >= 6) return;
 
   if (key === "BACKSPACE" || key === "Backspace") {
+    if (state.isSubmitting) return;
+
     // Se a casa atual tiver letra, apaga ela
     if (state.currentLetters[state.selectedCol]) {
       state.currentLetters[state.selectedCol] = "";
@@ -404,20 +414,27 @@ function handleInput(key) {
       renderBoard();
     }
   } else if (key === "ENTER" || key === "Enter") {
-    const isFull = state.currentLetters.every(c => c && c.length === 1);
-    if (isFull) {
-      const wordToSend = state.currentLetters.join("").toUpperCase();
+    if (state.isSubmitting) return; // Trava contra múltiplos disparos rápidos
+
+    const wordToSend = state.currentLetters.join("").trim().toUpperCase();
+
+    if (wordToSend.length === 5 && /^[A-Z]{5}$/.test(wordToSend)) {
+      state.isSubmitting = true;
       setComponentValue({
         word: wordToSend,
         timestamp: Date.now()
       });
-      state.currentLetters = ["", "", "", "", ""];
-      state.selectedCol = 0;
+      // Destrava de segurança caso o Streamlit demore mais de 3.5s
+      setTimeout(() => {
+        state.isSubmitting = false;
+      }, 3500);
     } else {
       shakeRow(activeRowIdx);
       showToast("Apenas palavras de 5 letras!");
     }
   } else if (/^[a-zA-Z]$/.test(key)) {
+    if (state.isSubmitting) return;
+
     // Insere a letra na casa selecionada
     state.currentLetters[state.selectedCol] = key.toUpperCase();
     
@@ -439,28 +456,50 @@ function handleInput(key) {
   }
 }
 
-// Captura teclado físico
-window.addEventListener("keydown", (e) => {
+// Captura unificada de teclado físico (tanto no iframe quanto no documento pai Streamlit)
+function handleGlobalKeydown(e) {
+  // Ignora se o usuário estiver digitando em campos de formulário reais (ex: popup de nickname)
+  const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+  if (tag === "INPUT" || tag === "TEXTAREA" || (e.target && e.target.isContentEditable)) {
+    return;
+  }
+
   if (e.key === "Backspace") {
     e.preventDefault();
     handleInput("BACKSPACE");
   } else if (e.key === "Enter") {
     e.preventDefault();
     handleInput("ENTER");
-  } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+  } else if (e.key === "ArrowLeft") {
     e.preventDefault();
-    handleInput(e.key);
+    handleInput("ArrowLeft");
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    handleInput("ArrowRight");
   } else if (e.key === "Tab") {
     e.preventDefault();
-    if (e.shiftKey) {
-      handleInput("ArrowLeft");
-    } else {
-      handleInput("ArrowRight");
-    }
-  } else if (/^[a-zA-Z]$/.test(e.key)) {
+    handleInput(e.shiftKey ? "ArrowLeft" : "ArrowRight");
+  } else if (/^[a-zA-Z]$/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    e.preventDefault();
     handleInput(e.key);
   }
-});
+}
+
+// Escuta no iframe
+window.addEventListener("keydown", handleGlobalKeydown);
+
+// Escuta no documento pai (Streamlit) para garantir que teclado físico funcione mesmo sem clicar no iframe primeiro
+try {
+  if (window.parent && window.parent !== window) {
+    window.parent.addEventListener("keydown", handleGlobalKeydown);
+  }
+} catch (err) {
+  // Fallback silencioso
+}
+
+// Garante foco ao interagir com o mouse
+document.addEventListener("mouseenter", () => window.focus());
+document.addEventListener("click", () => window.focus());
 
 // Listener de mensagens do Streamlit
 window.addEventListener("message", function(event) {
@@ -470,6 +509,11 @@ window.addEventListener("message", function(event) {
     state.evaluations = args.evaluations || [];
     state.keyColors = args.keyColors || {};
     state.gameOver = args.gameOver || false;
+
+    // Reseta letras temporárias e trava de envio para a próxima rodada
+    state.currentLetters = ["", "", "", "", ""];
+    state.selectedCol = 0;
+    state.isSubmitting = false;
 
     renderBoard();
     renderKeyboard();

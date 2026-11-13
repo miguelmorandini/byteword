@@ -435,7 +435,10 @@ function renderBoard() {
         tile.className = classes.join(" ");
         tile.innerText = char;
 
-        tile.addEventListener("pointerdown", (e) => {
+        tile.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+        });
+        tile.addEventListener("click", (e) => {
           e.preventDefault();
           selectedCol = c;
           renderBoard();
@@ -481,7 +484,10 @@ function renderKeyboard() {
         }
       }
 
-      btn.addEventListener("pointerdown", (e) => {
+      btn.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+      });
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
         handleInput(key);
       });
@@ -504,9 +510,8 @@ function handleInput(key) {
       renderBoard();
     }
   } else if (key === "ENTER" || key === "Enter") {
-    const isFull = currentLetters.every(c => c && c.length === 1);
-    if (isFull) {
-      const word = currentLetters.join("").toUpperCase();
+    const word = currentLetters.join("").trim().toUpperCase();
+    if (word.length === 5 && /^[A-Z]{5}$/.test(word)) {
       const ev = evaluateGuess(word, targetWord);
       attempts.push(word);
       evaluations.push(ev);
