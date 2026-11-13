@@ -155,3 +155,31 @@ Este roteiro foi estruturado para demonstrar **domínio técnico**, **visão de 
    dbt docs serve --port 8080
    ```
 4. Apresente no navegador o **Lineage Graph (DAG)** interativo, mostrando como o dado flui desde as fontes (`raw_games`, `raw_players`, `raw_guesses`) passando pelas views de staging até as dimensões e fatos finais.
+
+---
+
+## 🌐 Como Publicar no GitHub e Fazer o Deploy
+
+O projeto já está com o repositório Git local inicializado e pronto para publicação.
+
+### 1. Conectar ao seu GitHub
+Crie um repositório vazio no seu GitHub (ex: `tech-termo-analytics`) e execute:
+```powershell
+git remote add origin https://github.com/SEU_USUARIO/tech-termo-analytics.git
+git push -u origin main
+```
+
+### 2. Deploy no GitHub Pages (Versão Showcase Estática)
+O projeto conta com o workflow automatizado [`.github/workflows/deploy_pages.yml`](.github/workflows/deploy_pages.yml) e a página estática em `docs/index.html`.
+- No seu repositório no GitHub, acesse **Settings** > **Pages**.
+- Em **Build and deployment** > **Source**, selecione **GitHub Actions** (ou **Deploy from a branch** > branch `main` / pasta `/docs`).
+- O GitHub Actions fará o build automaticamente e disponibilizará o jogo online em:  
+  `https://SEU_USUARIO.github.io/tech-termo-analytics/`
+
+### 3. Deploy da Aplicação Completa no Streamlit Community Cloud (Gratuito)
+Como o Streamlit + DuckDB + dbt utiliza Python no backend, o deploy oficial recomendado é o **Streamlit Community Cloud**:
+1. Acesse [share.streamlit.io](https://share.streamlit.io/) e faça login com sua conta do GitHub.
+2. Clique em **"New app"**.
+3. Selecione o repositório `tech-termo-analytics`, branch `main` e o arquivo principal `app.py`.
+4. Clique em **"Deploy!"**.
+5. Em menos de 2 minutos sua aplicação com DuckDB, dbt e Streamlit estará pública em uma URL HTTPS acessível de qualquer dispositivo.
