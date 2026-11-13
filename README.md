@@ -5,7 +5,7 @@
 [![dbt-core](https://img.shields.io/badge/dbt--core-1.8+-orange.svg)](https://www.getdbt.com/)
 [![DuckDB](https://img.shields.io/badge/DuckDB-1.1+-yellow.svg)](https://duckdb.org/)
 
-> 🎮 **Acesse a aplicação ao vivo:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
+> **Acesse a aplicação ao vivo:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
 
 Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a ponta, desenvolvida para demonstrar o poder e as melhores práticas do ecossistema de **Modern Data Stack** local e em nuvem: **dbt Core**, **DuckDB** e **Streamlit**.
 
@@ -140,8 +140,8 @@ O deploy é sincronizado automaticamente com os commits da branch `main` deste r
 Para configurar o cabeçalho e a barra lateral do repositório no GitHub:
 
 - **Description:**  
-  `🎮 Wordle-style tech game powered by Streamlit, DuckDB, and an end-to-end dbt Core analytical pipeline (ELT, Jinja macros, ranking marts & data quality tests).`
+  `Tech game powered by Streamlit, DuckDB, and an end-to-end dbt Core analytical pipeline (ELT, Jinja macros, ranking marts & data quality tests).`
 - **Website:**  
   `https://byte-word.streamlit.app/`
 - **Topics (Tags):**  
-  `dbt`, `duckdb`, `streamlit`, `data-engineering`, `analytics-engineering`, `modern-data-stack`, `wordle`, `game-analytics`, `python`
+  `dbt`, `duckdb`, `streamlit`, `data-engineering`, `analytics-engineering`, `modern-data-stack`, `game-analytics`, `python`
