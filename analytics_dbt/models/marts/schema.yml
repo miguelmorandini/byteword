@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: fct_games
-    description: "Tabela de fatos contendo cada partida jogada no Tech Termo com pontuação e métricas consolidadas."
+    description: "Tabela de fatos contendo cada partida jogada no ByteWord com pontuação e métricas consolidadas."
     columns:
       - name: game_id
         description: "Chave primária da partida."

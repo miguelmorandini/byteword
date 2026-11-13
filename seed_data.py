@@ -1,6 +1,6 @@
 """
-Script gerador de partidas sintéticas para Tech Termo Analytics.
-Popula data/termo.duckdb com histórico realista de jogadores e partidas
+Script gerador de partidas sintéticas para ByteWord.
+Popula data/byteword.duckdb com histórico realista de jogadores e partidas
 para que o painel e o Leaderboard já iniciem com dados prontos para apresentação.
 """
 
@@ -73,7 +73,7 @@ def seed_database(num_games_per_player: int = 6):
             total_generated += 1
             current_time = game_end + timedelta(hours=random.randint(2, 14))
 
-    print(f"Sucesso! {total_generated} partidas sintéticas geradas em data/termo.duckdb.")
+    print(f"Sucesso! {total_generated} partidas sintéticas geradas em data/byteword.duckdb.")
 
 if __name__ == "__main__":
     seed_database()

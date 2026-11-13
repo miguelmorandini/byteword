@@ -10,7 +10,7 @@ import pandas as pd
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-DB_PATH = DATA_DIR / "termo.duckdb"
+DB_PATH = DATA_DIR / "byteword.duckdb"
 
 def ensure_data_dir():
     DATA_DIR.mkdir(parents=True, exist_ok=True)

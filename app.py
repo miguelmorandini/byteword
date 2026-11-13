@@ -16,7 +16,7 @@ from seed_data import TECH_WORDS, seed_database
 
 # Configuração da página Streamlit
 st.set_page_config(
-    page_title="Tech Termo Analytics | dbt + DuckDB",
+    page_title="ByteWord | dbt Core + DuckDB",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -61,8 +61,8 @@ def auto_bootstrap():
 
 auto_bootstrap()
 
-COMPONENT_DIR = BASE_DIR / "termo_component"
-termo_component = components.declare_component("termo_game", path=str(COMPONENT_DIR))
+COMPONENT_DIR = BASE_DIR / "byteword_component"
+byteword_component = components.declare_component("byteword_game", path=str(COMPONENT_DIR))
 
 # Estilização CSS customizada
 st.markdown("""
@@ -123,7 +123,7 @@ init_game_state()
 # ==========================================
 # POPUP DIALOGS: NICKNAME & RANKING
 # ==========================================
-@st.dialog("👋 Bem-vindo ao Tech Termo Analytics!")
+@st.dialog("👋 Bem-vindo ao ByteWord!")
 def show_nickname_dialog():
     st.markdown("""
     Digite seu **nickname** para iniciar a partida.  
@@ -201,7 +201,7 @@ def show_ranking_dialog():
 # Barra Lateral (Sidebar)
 with st.sidebar:
     st.image("https://raw.githubusercontent.com/dbt-labs/dbt-core/main/dbt_logo.svg", width=60)
-    st.title("Tech Termo")
+    st.title("ByteWord")
     st.caption("Stack: **Streamlit + DuckDB + dbt Core**")
     st.markdown("---")
 
@@ -217,7 +217,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🎮 Regras & Teclado")
     st.markdown("""
-    - Descubra o termo tech secreto de **5 letras**.
+    - Descubra a palavra tech secreta de **5 letras**.
     - Você tem até **6 tentativas**.
     - As teclas no teclado virtual mudam de cor conforme as pistas:
       - 🟩 **Verde**: Posição exata.
@@ -233,13 +233,13 @@ with st.sidebar:
 
 # Abas principais da aplicação
 tab_game, tab_leaderboard, tab_dbt = st.tabs([
-    "🎮 Jogar Tech Termo", 
+    "🎮 Jogar ByteWord", 
     "🏆 Hall da Fama (Marts dbt)", 
     "⚙️ Operações dbt & Qualidade"
 ])
 
 # ==========================================
-# ABA 1: O JOGO TECH TERMO
+# ABA 1: O JOGO BYTEWORD
 # ==========================================
 with tab_game:
     current_nick = st.session_state.player_nickname if st.session_state.nickname_set else "Não Definido"
@@ -263,7 +263,7 @@ with tab_game:
                 key_colors[char] = color
         evaluations.append(row_eval)
 
-    # Centraliza o jogo em uma coluna proporcional e confortável (estilo Termo original)
+    # Centraliza o jogo em uma coluna proporcional e confortável (estilo Wordle/ByteWord)
     col_l, col_center, col_r = st.columns([1.2, 3.6, 1.2])
     with col_center:
         col_hdr1, col_hdr2, col_hdr3 = st.columns([2.6, 1.2, 1.2])
@@ -277,7 +277,7 @@ with tab_game:
                 init_game_state(new_game=True)
                 st.rerun()
 
-        component_val = termo_component(
+        component_val = byteword_component(
             attempts=st.session_state.attempts,
             evaluations=evaluations,
             keyColors=key_colors,
@@ -414,7 +414,7 @@ with tab_leaderboard:
                 st.plotly_chart(fig_scores, width="stretch")
 
         with col_chart2:
-            st.subheader("🧠 Dificuldade dos Termos Tech")
+            st.subheader("🧠 Dificuldade das Palavras Tech")
             if not df_words.empty:
                 fig_words = px.bar(
                     df_words.head(10),
@@ -422,7 +422,7 @@ with tab_leaderboard:
                     y="fail_rate_percentage",
                     color="difficulty_tier",
                     color_discrete_map={"Difícil": "#e53935", "Médio": "#fdd835", "Fácil": "#43a047"},
-                    labels={"target_word": "Termo", "fail_rate_percentage": "Taxa de Erro (%)", "difficulty_tier": "Nível"},
+                    labels={"target_word": "Palavra", "fail_rate_percentage": "Taxa de Erro (%)", "difficulty_tier": "Nível"},
                     title="Palavras com Maior Taxa de Derrota (%)"
                 )
                 fig_words.update_layout(xaxis_tickangle=-45, height=360)

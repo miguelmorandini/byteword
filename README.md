@@ -1,4 +1,4 @@
-# ⚡ Tech Termo Analytics: dbt Core + DuckDB + Streamlit
+# ⚡ ByteWord: dbt Core + DuckDB + Streamlit
 
 Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a ponta, desenvolvida para demonstrar o poder e as melhores práticas do ecossistema de **Modern Data Stack** local: **dbt Core**, **DuckDB** e **Streamlit**.
 
@@ -7,14 +7,14 @@ Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a
 ## 🎯 Visão Geral da Arquitetura
 
 O projeto une gamificação e engenharia analítica corporativa:
-1. **Frontend & Coleta:** Uma aplicação web interativa desenvolvida em **Streamlit** no estilo *Termo / Wordle*, desafiando o usuário a adivinhar termos técnicos (ex: `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`). Cada palpite e partida é gravado em tempo real no banco colunar local **DuckDB** (`data/termo.duckdb`).
+1. **Frontend & Coleta:** Uma aplicação web interativa desenvolvida em **Streamlit** no estilo *ByteWord*, desafiando o usuário a adivinhar palavras técnicas de 5 letras (ex: `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`). Cada palpite e partida é gravado em tempo real no banco colunar local **DuckDB** (`data/byteword.duckdb`).
 2. **Transformação & Governança:** Projeto completo em **dbt Core** orquestrando camadas padronizadas (**Sources**, **Staging**, **Marts**), macros Jinja modulares e testes automatizados de qualidade.
 3. **Consumo & BI:** Painel com Leaderboard (Hall da Fama), métricas analíticas por jogador e análise de dificuldade das palavras, além de linhagem de dados navegável no **dbt docs**.
 
 ```mermaid
 flowchart TD
     subgraph Frontend["1. Frontend Interativo (Streamlit)"]
-        UI["app.py (Tech Termo Game)"]
+        UI["app.py (ByteWord Game)"]
     end
 
     subgraph Storage["2. Banco Analítico Colunar (DuckDB)"]
@@ -60,7 +60,7 @@ dbt/
 ├── requirements.txt            # Dependências Python
 ├── README.md                   # Documentação executiva e roteiro de apresentação
 ├── data/
-│   └── termo.duckdb            # Banco analítico DuckDB compartilhado
+│   └── byteword.duckdb         # Banco analítico DuckDB compartilhado
 └── analytics_dbt/              # Projeto dbt Core
     ├── dbt_project.yml         # Configurações do projeto e materializações
     ├── profiles.yml            # Adapter DuckDB com suporte a variáveis de ambiente
@@ -120,7 +120,7 @@ Este roteiro foi estruturado para demonstrar **domínio técnico**, **visão de 
 ### ⏱️ Passo 1: Contexto e Frontend Interativo (2 minutos)
 1. Abra a aplicação no navegador (`http://localhost:8501`).
 2. Digite um nickname personalizado na barra lateral (ex: `Gestor_Data`).
-3. Jogue uma rodada rápida de **Tech Termo** no navegador (palpites com termos como `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`).
+3. Jogue uma rodada rápida de **ByteWord** no navegador (palpites com termos como `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`).
 4. Explique:
    > *"Cada palpite e cada finalização de partida são persistidos em tempo real no DuckDB, um banco analítico colunar ultrarrápido ideal para arquiteturas serverless e edge analytics."*
 
@@ -147,7 +147,7 @@ Este roteiro foi estruturado para demonstrar **domínio técnico**, **visão de 
 2. Mostre:
    - Os KPIs consolidados (Total de Jogos, Top Player, Taxa de Vitória).
    - O Ranking ordenado consumindo a tabela `dim_players_ranking` com cálculo de *Win Streak* via window functions.
-   - O gráfico de **Dificuldade dos Termos Tech** (`dim_words_difficulty`), demonstrando quais termos de engenharia causaram mais derrotas aos jogadores.
+   - O gráfico de **Dificuldade das Palavras Tech** (`dim_words_difficulty`), demonstrando quais termos de engenharia causaram mais derrotas aos jogadores.
 3. Para fechar com chave de ouro, abra um novo terminal e rode:
    ```powershell
    cd analytics_dbt
@@ -163,9 +163,9 @@ Este roteiro foi estruturado para demonstrar **domínio técnico**, **visão de 
 O projeto já está com o repositório Git local inicializado e pronto para publicação.
 
 ### 1. Conectar ao seu GitHub
-Crie um repositório vazio no seu GitHub (ex: `tech-termo-analytics`) e execute:
+Crie um repositório vazio no seu GitHub (ex: `byteword`) e execute:
 ```powershell
-git remote add origin https://github.com/SEU_USUARIO/tech-termo-analytics.git
+git remote add origin https://github.com/SEU_USUARIO/byteword.git
 git push -u origin main
 ```
 
@@ -174,12 +174,12 @@ O projeto conta com o workflow automatizado [`.github/workflows/deploy_pages.yml
 - No seu repositório no GitHub, acesse **Settings** > **Pages**.
 - Em **Build and deployment** > **Source**, selecione **GitHub Actions** (ou **Deploy from a branch** > branch `main` / pasta `/docs`).
 - O GitHub Actions fará o build automaticamente e disponibilizará o jogo online em:  
-  `https://SEU_USUARIO.github.io/tech-termo-analytics/`
+  `https://SEU_USUARIO.github.io/byteword/`
 
 ### 3. Deploy da Aplicação Completa no Streamlit Community Cloud (Gratuito)
 Como o Streamlit + DuckDB + dbt utiliza Python no backend, o deploy oficial recomendado é o **Streamlit Community Cloud**:
 1. Acesse [share.streamlit.io](https://share.streamlit.io/) e faça login com sua conta do GitHub.
 2. Clique em **"New app"**.
-3. Selecione o repositório `tech-termo-analytics`, branch `main` e o arquivo principal `app.py`.
+3. Selecione o repositório `byteword`, branch `main` e o arquivo principal `app.py`.
 4. Clique em **"Deploy!"**.
 5. Em menos de 2 minutos sua aplicação com DuckDB, dbt e Streamlit estará pública em uma URL HTTPS acessível de qualquer dispositivo.

@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: main
-    description: "Tabelas brutas registradas em tempo real pelas partidas do Tech Termo."
+    description: "Tabelas brutas registradas em tempo real pelas partidas do ByteWord."
     tables:
       - name: raw_players
         description: "Jogadores cadastrados com seus nicknames e timestamps de criação."
@@ -15,14 +15,14 @@ sources:
             description: "Momento de cadastro do jogador."
 
       - name: raw_games
-        description: "Partidas jogadas no Tech Termo."
+        description: "Partidas jogadas no ByteWord."
         columns:
           - name: id
             description: "Identificador único da partida."
           - name: player_id
             description: "Chave estrangeira referenciando raw_players.id."
           - name: target_word
-            description: "Palavra secreta da partida (termo tech de 5 letras)."
+            description: "Palavra secreta da partida (palavra tech de 5 letras)."
           - name: is_won
             description: "Indicador booleano de vitória (true se acertou a palavra)."
           - name: attempts_count
