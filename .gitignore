@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+data/*.duckdb
+data/*.duckdb.tmp
+analytics_dbt/target/
+analytics_dbt/dbt_packages/
+analytics_dbt/logs/
+.DS_Store

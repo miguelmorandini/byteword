@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Termo</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    background-color: transparent;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 0;
+    overflow: hidden;
+  }
+  
+  .game-wrapper {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+  }
+
+  .game-title {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #f7f7f7;
+    text-align: center;
+  }
+
+  /* 6x5 Board Proporcional e Amplo */
+  .board {
+    display: grid;
+    grid-template-rows: repeat(6, 1fr);
+    gap: 7px;
+    width: 340px;
+    height: 410px;
+  }
+  .board-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 7px;
+  }
+  .tile {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-family: monospace, sans-serif;
+    transition: transform 0.12s ease, background-color 0.25s ease, border-color 0.15s ease;
+  }
+
+  .tile-empty {
+    background-color: #615458;
+    border: 2px solid #4c4347;
+    color: transparent;
+  }
+  
+  /* Linha ativa com tiles clicáveis */
+  .tile-clickable {
+    cursor: pointer;
+  }
+  .tile-clickable:hover {
+    filter: brightness(1.15);
+  }
+
+  .tile-active {
+    background-color: #615458;
+    border: 2px solid #8f7e83;
+    color: #ffffff;
+  }
+  .tile-selected {
+    border: 3px solid #ffffff !important;
+    background-color: #6d5e63 !important;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.55);
+    transform: scale(1.05);
+  }
+
+  /* Cores de resultado estilo Termo */
+  .tile-green {
+    background-color: #3aa394 !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+  .tile-yellow {
+    background-color: #d3ad69 !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+  .tile-gray {
+    background-color: #312a2c !important;
+    border: none !important;
+    color: #e0e0e0 !important;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .tile-pop {
+    animation: pop 0.12s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .row-shake {
+    animation: shake 0.35s ease-in-out;
+  }
+
+  /* Teclado Virtual Grande e Espaçoso (Idêntico ao Termo original) */
+  .keyboard {
+    width: 100%;
+    max-width: 550px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .key {
+    background-color: #4c4347;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 800;
+    height: 62px;
+    border-radius: 6px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.05s, filter 0.1s;
+    touch-action: manipulation;
+  }
+  .key:hover {
+    filter: brightness(1.22);
+  }
+  .key:active {
+    transform: scale(0.93);
+    filter: brightness(0.9);
+  }
+  .key-wide {
+    flex: 1.65;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .key-green {
+    background-color: #3aa394 !important;
+    color: #ffffff !important;
+  }
+  .key-yellow {
+    background-color: #d3ad69 !important;
+    color: #ffffff !important;
+  }
+  .key-gray {
+    background-color: #312a2c !important;
+    color: #888888 !important;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: absolute;
+    top: 50px;
+    background-color: rgba(20, 20, 20, 0.96);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="game-wrapper">
+  <div id="toast" class="toast">Apenas palavras de 5 letras!</div>
+  <div class="game-title">TERMO</div>
+
+  <!-- Board 6x5 -->
+  <div class="board" id="board"></div>
+
+  <!-- Virtual Keyboard -->
+  <div class="keyboard" id="keyboard"></div>
+</div>
+
+<script>
+// Streamlit messaging helper
+function sendMessageToStreamlit(type, data = {}) {
+  window.parent.postMessage({
+    isStreamlitMessage: true,
+    type: type,
+    ...data
+  }, "*");
+}
+
+function setComponentValue(value) {
+  sendMessageToStreamlit("streamlit:setComponentValue", { value: value });
+}
+
+function setFrameHeight() {
+  const height = 730;
+  sendMessageToStreamlit("streamlit:setFrameHeight", { height: height });
+}
+
+// Layout do teclado Termo exatamente como na foto
+const KEYBOARD_LAYOUT = [
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L", "BACKSPACE"],
+  ["Z", "X", "C", "V", "B", "N", "M", "ENTER"]
+];
+
+let state = {
+  attempts: [],
+  evaluations: [],
+  keyColors: {},
+  gameOver: false,
+  // Letras da linha ativa divididas em 5 posições individuais
+  currentLetters: ["", "", "", "", ""],
+  // Índice da coluna atualmente selecionada (0 a 4)
+  selectedCol: 0
+};
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1600);
+}
+
+function shakeRow(rowIdx) {
+  const row = document.getElementById(`row-${rowIdx}`);
+  if (row) {
+    row.classList.add("row-shake");
+    setTimeout(() => row.classList.remove("row-shake"), 380);
+  }
+}
+
+function selectColumn(colIdx) {
+  if (state.gameOver) return;
+  state.selectedCol = colIdx;
+  renderBoard();
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById("board");
+  boardEl.innerHTML = "";
+
+  const activeRowIdx = state.attempts.length;
+
+  for (let r = 0; r < 6; r++) {
+    const rowEl = document.createElement("div");
+    rowEl.className = "board-row";
+    rowEl.id = `row-${r}`;
+
+    if (r < state.attempts.length) {
+      // Linha já jogada com cores fixas
+      const word = state.attempts[r];
+      const ev = state.evaluations[r] || [];
+      for (let c = 0; c < 5; c++) {
+        const tile = document.createElement("div");
+        const color = ev[c] ? ev[c].color : "gray";
+        tile.className = `tile tile-${color}`;
+        tile.innerText = word[c] || "";
+        rowEl.appendChild(tile);
+      }
+    } else if (r === activeRowIdx && !state.gameOver) {
+      // Linha ativa: CADA QUADRADINHO É CLICÁVEL E EDITÁVEL INDIVIDUALMENTE!
+      for (let c = 0; c < 5; c++) {
+        const tile = document.createElement("div");
+        const char = state.currentLetters[c] || "";
+        
+        let classes = ["tile", "tile-clickable"];
+        if (char) classes.push("tile-active");
+        else classes.push("tile-empty");
+
+        // Destaque visual na casa atualmente selecionada para digitação
+        if (c === state.selectedCol) {
+          classes.push("tile-selected");
+        }
+
+        tile.className = classes.join(" ");
+        tile.innerText = char;
+
+        // Permite clicar em qualquer uma das 5 casas da linha para posicionar o cursor!
+        tile.addEventListener("pointerdown", ((colIndex) => {
+          return (e) => {
+            e.preventDefault();
+            selectColumn(colIndex);
+          };
+        })(c));
+
+        rowEl.appendChild(tile);
+      }
+    } else {
+      // Linha futura vazia
+      for (let c = 0; c < 5; c++) {
+        const tile = document.createElement("div");
+        tile.className = "tile tile-empty";
+        rowEl.appendChild(tile);
+      }
+    }
+
+    boardEl.appendChild(rowEl);
+  }
+}
+
+function renderKeyboard() {
+  const kbEl = document.getElementById("keyboard");
+  kbEl.innerHTML = "";
+
+  KEYBOARD_LAYOUT.forEach(row => {
+    const rowEl = document.createElement("div");
+    rowEl.className = "keyboard-row";
+
+    row.forEach(key => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "key";
+
+      if (key === "ENTER") {
+        btn.classList.add("key-wide");
+        btn.innerText = "ENTER";
+      } else if (key === "BACKSPACE") {
+        btn.classList.add("key-wide");
+        btn.innerHTML = "&#9003;"; // Símbolo ⌫
+      } else {
+        btn.innerText = key;
+        const color = state.keyColors[key];
+        if (color) {
+          btn.classList.add(`key-${color}`);
+        }
+      }
+
+      // Usa pointerdown para resposta instantânea ao toque/clique sem atraso
+      btn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        handleInput(key);
+      });
+
+      rowEl.appendChild(btn);
+    });
+
+    kbEl.appendChild(rowEl);
+  });
+}
+
+function handleInput(key) {
+  if (state.gameOver) return;
+
+  const activeRowIdx = state.attempts.length;
+  if (activeRowIdx >= 6) return;
+
+  if (key === "BACKSPACE" || key === "Backspace") {
+    // Se a casa atual tiver letra, apaga ela
+    if (state.currentLetters[state.selectedCol]) {
+      state.currentLetters[state.selectedCol] = "";
+      renderBoard();
+    } else if (state.selectedCol > 0) {
+      // Se já estava vazia, recua e apaga a anterior
+      state.selectedCol--;
+      state.currentLetters[state.selectedCol] = "";
+      renderBoard();
+    }
+  } else if (key === "ENTER" || key === "Enter") {
+    const isFull = state.currentLetters.every(c => c && c.length === 1);
+    if (isFull) {
+      const wordToSend = state.currentLetters.join("").toUpperCase();
+      setComponentValue({
+        word: wordToSend,
+        timestamp: Date.now()
+      });
+      state.currentLetters = ["", "", "", "", ""];
+      state.selectedCol = 0;
+    } else {
+      shakeRow(activeRowIdx);
+      showToast("Apenas palavras de 5 letras!");
+    }
+  } else if (/^[a-zA-Z]$/.test(key)) {
+    // Insere a letra na casa selecionada
+    state.currentLetters[state.selectedCol] = key.toUpperCase();
+    
+    // Avança automaticamente o cursor para a próxima casa (se houver)
+    if (state.selectedCol < 4) {
+      state.selectedCol++;
+    }
+    renderBoard();
+  } else if (key === "ArrowLeft") {
+    if (state.selectedCol > 0) {
+      state.selectedCol--;
+      renderBoard();
+    }
+  } else if (key === "ArrowRight") {
+    if (state.selectedCol < 4) {
+      state.selectedCol++;
+      renderBoard();
+    }
+  }
+}
+
+// Captura teclado físico
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    handleInput("BACKSPACE");
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    handleInput("ENTER");
+  } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    handleInput(e.key);
+  } else if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      handleInput("ArrowLeft");
+    } else {
+      handleInput("ArrowRight");
+    }
+  } else if (/^[a-zA-Z]$/.test(e.key)) {
+    handleInput(e.key);
+  }
+});
+
+// Listener de mensagens do Streamlit
+window.addEventListener("message", function(event) {
+  if (event.data.type === "streamlit:render") {
+    const args = event.data.args;
+    state.attempts = args.attempts || [];
+    state.evaluations = args.evaluations || [];
+    state.keyColors = args.keyColors || {};
+    state.gameOver = args.gameOver || false;
+
+    renderBoard();
+    renderKeyboard();
+    setFrameHeight();
+  }
+});
+
+// Inicialização
+window.addEventListener("DOMContentLoaded", () => {
+  sendMessageToStreamlit("streamlit:componentReady", { apiVersion: 1 });
+  renderBoard();
+  renderKeyboard();
+  setFrameHeight();
+});
+</script>
+</body>
+</html>

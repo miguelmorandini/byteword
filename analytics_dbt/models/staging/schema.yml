@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: stg_players
+    description: "Visão padronizada e limpa dos jogadores cadastrados."
+    columns:
+      - name: player_id
+        description: "Chave primária do jogador."
+        tests:
+          - unique
+          - not_null
+      - name: player_nickname
+        description: "Nickname formatado e sem espaços em branco."
+        tests:
+          - not_null
+      - name: created_at
+        description: "Timestamp de criação do registro."
+        tests:
+          - not_null
+
+  - name: stg_games
+    description: "Visão padronizada e tipada das partidas jogadas."
+    columns:
+      - name: game_id
+        description: "Chave primária da partida."
+        tests:
+          - unique
+          - not_null
+      - name: player_id
+        description: "Chave estrangeira para stg_players."
+        tests:
+          - not_null
+      - name: target_word
+        description: "Palavra secreta em letras maiúsculas."
+        tests:
+          - not_null
+      - name: is_won
+        description: "Flag indicando vitória."
+        tests:
+          - not_null
+      - name: attempts_count
+        description: "Contagem de tentativas."
+        tests:
+          - not_null
+      - name: started_at
+        description: "Timestamp de início da partida."
+        tests:
+          - not_null
+      - name: ended_at
+        description: "Timestamp de término da partida."
+        tests:
+          - not_null
+      - name: duration_seconds
+        description: "Duração da partida em segundos."
+        tests:
+          - not_null
+
+  - name: stg_guesses
+    description: "Visão padronizada de cada palpite realizado pelos jogadores."
+    columns:
+      - name: guess_id
+        description: "Chave primária do palpite."
+        tests:
+          - unique
+          - not_null
+      - name: game_id
+        description: "Chave estrangeira para stg_games."
+        tests:
+          - not_null
+      - name: attempt_number
+        description: "Número da tentativa."
+        tests:
+          - not_null
+      - name: guessed_word
+        description: "Palavra palpitada normalizada em maiúsculas."
+        tests:
+          - not_null
+      - name: guess_timestamp
+        description: "Timestamp da tentativa."
+        tests:
+          - not_null

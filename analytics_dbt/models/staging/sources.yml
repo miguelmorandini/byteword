@@ -1,0 +1,49 @@
+version: 2
+
+sources:
+  - name: main
+    description: "Tabelas brutas registradas em tempo real pelas partidas do Tech Termo."
+    tables:
+      - name: raw_players
+        description: "Jogadores cadastrados com seus nicknames e timestamps de criação."
+        columns:
+          - name: id
+            description: "Identificador único do jogador."
+          - name: nickname
+            description: "Nome de exibição escolhido pelo jogador."
+          - name: created_at
+            description: "Momento de cadastro do jogador."
+
+      - name: raw_games
+        description: "Partidas jogadas no Tech Termo."
+        columns:
+          - name: id
+            description: "Identificador único da partida."
+          - name: player_id
+            description: "Chave estrangeira referenciando raw_players.id."
+          - name: target_word
+            description: "Palavra secreta da partida (termo tech de 5 letras)."
+          - name: is_won
+            description: "Indicador booleano de vitória (true se acertou a palavra)."
+          - name: attempts_count
+            description: "Quantidade de tentativas utilizadas (de 1 a 6)."
+          - name: started_at
+            description: "Data e hora de início da partida."
+          - name: ended_at
+            description: "Data e hora de término da partida."
+          - name: duration_seconds
+            description: "Duração total da partida em segundos."
+
+      - name: raw_guesses
+        description: "Registro detalhado de cada palpite realizado dentro de uma partida."
+        columns:
+          - name: id
+            description: "Identificador único da tentativa/palpite."
+          - name: game_id
+            description: "Identificador da partida associada."
+          - name: attempt_number
+            description: "Número ordinal da tentativa (1 a 6)."
+          - name: guessed_word
+            description: "Palavra submetida pelo jogador no palpite."
+          - name: guess_timestamp
+            description: "Momento exato da submissão do palpite."

@@ -1,0 +1,7 @@
+tech_termo:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../data/termo.duckdb') }}"
+      threads: 1

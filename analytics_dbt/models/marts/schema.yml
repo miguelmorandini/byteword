@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: fct_games
+    description: "Tabela de fatos contendo cada partida jogada no Tech Termo com pontuação e métricas consolidadas."
+    columns:
+      - name: game_id
+        description: "Chave primária da partida."
+        tests:
+          - unique
+          - not_null
+      - name: player_id
+        description: "Chave estrangeira apontando para o jogador."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_players')
+                field: player_id
+      - name: attempts_count
+        description: "Número de tentativas usadas (1 a 6)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6]
+      - name: game_score
+        description: "Pontuação calculada via macro Jinja considerando vitória, tentativas e tempo."
+        tests:
+          - not_null
+      - name: duration_seconds
+        description: "Duração da partida em segundos."
+        tests:
+          - not_null
+
+  - name: dim_players_ranking
+    description: "Dimensão analítica dos jogadores com estatísticas acumuladas, ranking e win streaks."
+    columns:
+      - name: player_id
+        description: "Chave primária do jogador na dimensão."
+        tests:
+          - unique
+          - not_null
+      - name: player_nickname
+        description: "Nome de exibição do jogador."
+        tests:
+          - not_null
+      - name: total_score
+        description: "Pontuação total acumulada em todas as partidas."
+        tests:
+          - not_null
+      - name: player_rank
+        description: "Posição do jogador no ranking geral (1 = melhor pontuador)."
+        tests:
+          - not_null
+
+  - name: dim_words_difficulty
+    description: "Dimensão analítica avaliando a taxa de sucesso e dificuldade de cada palavra do dicionário técnico."
+    columns:
+      - name: target_word
+        description: "Palavra técnica de 5 letras avaliada."
+        tests:
+          - unique
+          - not_null
+      - name: difficulty_tier
+        description: "Classificação calculada de dificuldade (Fácil, Médio, Difícil)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Fácil', 'Médio', 'Difícil']
