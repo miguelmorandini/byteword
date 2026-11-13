@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import subprocess
 import random
 from datetime import datetime
@@ -11,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 import db
-from seed_data import TECH_WORDS
+from seed_data import TECH_WORDS, seed_database
 
 # Configuração da página Streamlit
 st.set_page_config(
@@ -21,15 +22,44 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inicializa banco de dados DuckDB
-db.init_db()
-
 # Diretórios e Executáveis
 BASE_DIR = Path(__file__).resolve().parent
 DBT_DIR = BASE_DIR / "analytics_dbt"
 DBT_EXE = BASE_DIR / ".venv" / "Scripts" / "dbt.exe"
-if not DBT_EXE.exists():
-    DBT_EXE = Path("dbt")
+
+def run_dbt(args):
+    """Executa comandos do dbt de forma portável (Windows local ou Streamlit Cloud Linux)."""
+    env = os.environ.copy()
+    env["DBT_DUCKDB_PATH"] = str(db.DB_PATH)
+
+    if DBT_EXE.exists():
+        cmd = [str(DBT_EXE), *args]
+    elif shutil.which("dbt"):
+        cmd = [shutil.which("dbt"), *args]
+    else:
+        cmd = [sys.executable, "-m", "dbt.cli.main", *args]
+
+    cmd += ["--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)]
+    return subprocess.run(cmd, capture_output=True, text=True, env=env)
+
+def auto_bootstrap():
+    """Garante que na primeira execução (local ou Streamlit Cloud) o banco já tenha dados e marts prontos."""
+    db.init_db()
+    needs_seed = False
+    try:
+        df_games = db.query_df("SELECT count(*) as cnt FROM raw_games")
+        if df_games.empty or df_games.iloc[0]["cnt"] == 0:
+            needs_seed = True
+    except Exception:
+        needs_seed = True
+
+    if needs_seed:
+        seed_database(num_games_per_player=4)
+        run_dbt(["build"])
+    elif not db.table_exists("dim_players_ranking"):
+        run_dbt(["build"])
+
+auto_bootstrap()
 
 COMPONENT_DIR = BASE_DIR / "termo_component"
 termo_component = components.declare_component("termo_game", path=str(COMPONENT_DIR))
@@ -281,13 +311,7 @@ with tab_game:
                         ended_at=datetime.now()
                     )
                     # Atualiza os Marts do dbt automaticamente para o ranking refletir em tempo real
-                    env = os.environ.copy()
-                    env["DBT_DUCKDB_PATH"] = str(db.DB_PATH)
-                    subprocess.run(
-                        [str(DBT_EXE), "run", "--select", "fct_games dim_players_ranking dim_words_difficulty",
-                         "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)],
-                        capture_output=True, text=True, env=env
-                    )
+                    run_dbt(["run", "--select", "fct_games dim_players_ranking dim_words_difficulty"])
                 st.rerun()
 
         # Mensagens de Fim de Jogo (alinhadas ao tamanho do jogo)
@@ -323,14 +347,7 @@ with tab_leaderboard:
 
         if st.button("🚀 Rodar dbt build agora", width="stretch"):
             with st.spinner("Executando dbt build..."):
-                env = os.environ.copy()
-                env["DBT_DUCKDB_PATH"] = str(db.DB_PATH)
-                res = subprocess.run(
-                    [str(DBT_EXE), "build", "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)],
-                    capture_output=True,
-                    text=True,
-                    env=env
-                )
+                res = run_dbt(["build"])
                 if res.returncode == 0:
                     st.success("Tabelas Marts construídas com sucesso!")
                     st.rerun()
@@ -451,14 +468,7 @@ with tab_dbt:
     if run_build or run_test:
         cmd = ["build"] if run_build else ["test"]
         with st.spinner(f"Executando dbt {cmd[0]}..."):
-            env = os.environ.copy()
-            env["DBT_DUCKDB_PATH"] = str(db.DB_PATH)
-            proc = subprocess.run(
-                [str(DBT_EXE), *cmd, "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)],
-                capture_output=True,
-                text=True,
-                env=env
-            )
+            proc = run_dbt(cmd)
             if proc.returncode == 0:
                 st.success(f"✅ `dbt {cmd[0]}` concluído com sucesso!")
             else:
@@ -487,14 +497,7 @@ with tab_dbt:
     with col_cheat2:
         if st.button("🔍 Executar Teste Anti-Cheat (`assert_valid_game_duration`)", width="stretch"):
             with st.spinner("Executando teste customizado..."):
-                env = os.environ.copy()
-                env["DBT_DUCKDB_PATH"] = str(db.DB_PATH)
-                res = subprocess.run(
-                    [str(DBT_EXE), "test", "--select", "assert_valid_game_duration", "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR)],
-                    capture_output=True,
-                    text=True,
-                    env=env
-                )
+                res = run_dbt(["test", "--select", "assert_valid_game_duration"])
                 if res.returncode != 0:
                     st.error("🚨 O dbt interceptou com sucesso a anomalia anti-cheat!")
                     st.code(res.stdout, language="bash")
