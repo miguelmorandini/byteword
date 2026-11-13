@@ -113,51 +113,6 @@ streamlit run app.py
 
 ---
 
-## 🎤 Roteiro de Apresentação ao Vivo para o Gestor
-
-Este roteiro foi estruturado para demonstrar **domínio técnico**, **visão de arquitetura** e **governança de dados moderna** em menos de 8 minutos.
-
-### ⏱️ Passo 1: Contexto e Frontend Interativo (2 minutos)
-1. Abra a aplicação no navegador (`http://localhost:8501`).
-2. Digite um nickname personalizado na barra lateral (ex: `Gestor_Data`).
-3. Jogue uma rodada rápida de **ByteWord** no navegador (palpites com termos como `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`).
-4. Explique:
-   > *"Cada palpite e cada finalização de partida são persistidos em tempo real no DuckDB, um banco analítico colunar ultrarrápido ideal para arquiteturas serverless e edge analytics."*
-
-### ⏱️ Passo 2: A Camada de Engenharia dbt (2 minutos)
-1. Navegue até a aba **"⚙️ Operações dbt & Qualidade"**.
-2. Clique no botão **"🚀 Executar `dbt build`"**.
-3. Mostre o log de execução do dbt ao vivo no terminal e no Streamlit.
-4. Explique:
-   > *"Seguimos a arquitetura recomendada pelo dbt Labs: camada **Staging** com views efêmeras para normalização e tipagem, e camada **Marts** com tabelas dimensionais prontas para consumo de BI."*
-5. Destaque a **Macro Jinja (`macros/calculate_score.sql`)**:
-   > *"Em vez de duplicar regras de cálculo de score em SQL, encapsulamos a fórmula ponderada em uma macro Jinja reutilizável e testável."*
-
-### ⏱️ Passo 3: Garantia de Qualidade e Teste Anti-Cheat (2 minutos)
-1. Ainda na aba **"⚙️ Operações dbt & Qualidade"**, vá na seção de testes.
-2. Clique no botão **"⚠️ Injetar Dado Corrompido"** (simula um registro malicioso com duração negativa de `-120s`).
-3. Clique em **"🔍 Executar Teste Anti-Cheat"**.
-4. O dbt alertará o erro em vermelho, bloqueando a propagação do dado defeituoso!
-5. Explique:
-   > *"Demonstramos aqui a governança ativa do dbt. Além de testes de chave primária (`unique` e `not_null`) e integridade referencial (`relationships`), criamos um teste singular de regra de negócio (`assert_valid_game_duration.sql`) que impede que dados fraudulentos ou anomalias contaminem os relatórios de tomada de decisão."*
-6. Clique em **"🧹 Limpar Dados Corrompidos"**.
-
-### ⏱️ Passo 4: O Consumo Executivo e Linhagem de Dados (2 minutos)
-1. Navegue para a aba **"🏆 Hall da Fama (Marts dbt)"**.
-2. Mostre:
-   - Os KPIs consolidados (Total de Jogos, Top Player, Taxa de Vitória).
-   - O Ranking ordenado consumindo a tabela `dim_players_ranking` com cálculo de *Win Streak* via window functions.
-   - O gráfico de **Dificuldade das Palavras Tech** (`dim_words_difficulty`), demonstrando quais termos de engenharia causaram mais derrotas aos jogadores.
-3. Para fechar com chave de ouro, abra um novo terminal e rode:
-   ```powershell
-   cd analytics_dbt
-   dbt docs generate
-   dbt docs serve --port 8080
-   ```
-4. Apresente no navegador o **Lineage Graph (DAG)** interativo, mostrando como o dado flui desde as fontes (`raw_games`, `raw_players`, `raw_guesses`) passando pelas views de staging até as dimensões e fatos finais.
-
----
-
 ## 🌐 Como Publicar no GitHub e Fazer o Deploy
 
 O projeto já está com o repositório Git local inicializado e pronto para publicação.

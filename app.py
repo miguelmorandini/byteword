@@ -19,7 +19,7 @@ from words_validator import is_valid_word
 # Configuração da página Streamlit
 st.set_page_config(
     page_title="ByteWord | dbt Core + DuckDB",
-    page_icon="⚡",
+    page_icon="assets/logo.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -132,10 +132,14 @@ init_game_state()
 # ==========================================
 @st.dialog("👋 Bem-vindo ao ByteWord!")
 def show_nickname_dialog():
-    st.markdown("""
-    Digite seu **nickname** para iniciar a partida.  
-    Suas jogadas serão persistidas em tempo real no **DuckDB** e rankeadas pelo pipeline **dbt Core**.
-    """)
+    col_logo, col_desc = st.columns([1, 3.2])
+    with col_logo:
+        st.image("assets/logo.png", width=85)
+    with col_desc:
+        st.markdown("""
+        Digite seu **nickname** para iniciar a partida.  
+        Suas jogadas serão persistidas em tempo real no **DuckDB** e rankeadas pelo pipeline **dbt Core**.
+        """)
     nick = st.text_input(
         "Seu Nickname de Jogador:",
         value=st.session_state.get("player_nickname", ""),
@@ -207,7 +211,7 @@ def show_ranking_dialog():
 
 # Barra Lateral (Sidebar)
 with st.sidebar:
-    st.image("https://raw.githubusercontent.com/dbt-labs/dbt-core/main/dbt_logo.svg", width=60)
+    st.image("assets/logo.png", width=110)
     st.title("ByteWord")
     st.caption("Stack: **Streamlit + DuckDB + dbt Core**")
     st.markdown("---")
@@ -239,10 +243,9 @@ with st.sidebar:
         st.rerun()
 
 # Abas principais da aplicação
-tab_game, tab_leaderboard, tab_dbt = st.tabs([
+tab_game, tab_leaderboard = st.tabs([
     "🎮 Jogar ByteWord", 
-    "🏆 Hall da Fama (Marts dbt)", 
-    "⚙️ Operações dbt & Qualidade"
+    "🏆 Hall da Fama (Marts dbt)"
 ])
 
 # ==========================================
@@ -447,74 +450,3 @@ with tab_leaderboard:
             )
 
 
-# ==========================================
-# ABA 3: OPERAÇÕES DBT & QUALIDADE DE DADOS
-# ==========================================
-with tab_dbt:
-    st.header("⚙️ Pipeline de Transformação & Qualidade (dbt Core)")
-    st.markdown("""
-    Esta seção demonstra a governança, integridade de dados e compilação do pipeline analítico.
-    O dbt orquestra desde a camada de **Staging** até os **Marts**, executando testes automatizados.
-    """)
-
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
-
-    with col_btn1:
-        run_build = st.button("🚀 Executar `dbt build`", type="primary", width="stretch")
-    with col_btn2:
-        run_test = st.button("🧪 Executar `dbt test`", width="stretch")
-    with col_btn3:
-        seed_btn = st.button("🌱 Resetar Rival `anti-shavraul`", width="stretch")
-
-    if seed_btn:
-        with st.spinner("Configurando histórico do rival anti-shavraul..."):
-            from seed_data import seed_anti_shavraul
-            seed_anti_shavraul(num_games=5)
-            run_dbt(["build"])
-            st.success("Rival anti-shavraul configurado! O ranking contém apenas jogadores reais e o anti-shavraul.")
-            st.rerun()
-
-    if run_build or run_test:
-        cmd = ["build"] if run_build else ["test"]
-        with st.spinner(f"Executando dbt {cmd[0]}..."):
-            proc = run_dbt(cmd)
-            if proc.returncode == 0:
-                st.success(f"✅ `dbt {cmd[0]}` concluído com sucesso!")
-            else:
-                st.error(f"❌ Falha ao executar `dbt {cmd[0]}`:")
-            st.code(proc.stdout + "\n" + proc.stderr, language="bash")
-
-    st.markdown("---")
-    st.subheader("🛡️ Demonstração de Teste de Integridade (Anti-Cheat)")
-    st.markdown("""
-    Demonstre ao vivo para seu gestor como o dbt bloqueia anomalias de dados usando o teste singular:  
-    `assert_valid_game_duration.sql` (rejeita partidas com duração negativa ou tempo de término antes do início).
-    """)
-
-    col_cheat1, col_cheat2 = st.columns(2)
-    with col_cheat1:
-        if st.button("⚠️ Injetar Dado Corrompido (Duração = -120s)", width="stretch"):
-            with db.get_connection(read_only=False) as conn:
-                fake_pid = db.get_or_create_player("Hacker_Invalido")
-                conn.execute("""
-                    INSERT INTO raw_games (
-                        id, player_id, target_word, is_won, attempts_count, started_at, ended_at, duration_seconds
-                    ) VALUES ('cheat_game_999', ?, 'CHEAT', true, 1, '2026-11-12 12:00:00', '2026-11-12 11:58:00', -120)
-                """, [fake_pid])
-            st.warning("⚠️ Partida com duração de -120 segundos injetada no DuckDB! Agora clique no teste ao lado para ver o dbt barrá-la.")
-
-    with col_cheat2:
-        if st.button("🔍 Executar Teste Anti-Cheat (`assert_valid_game_duration`)", width="stretch"):
-            with st.spinner("Executando teste customizado..."):
-                res = run_dbt(["test", "--select", "assert_valid_game_duration"])
-                if res.returncode != 0:
-                    st.error("🚨 O dbt interceptou com sucesso a anomalia anti-cheat!")
-                    st.code(res.stdout, language="bash")
-                else:
-                    st.success("Nenhuma anomalia detectada no momento.")
-                    st.code(res.stdout, language="bash")
-
-    if st.button("🧹 Limpar Dados Corrompidos Injetados", width="stretch"):
-        with db.get_connection(read_only=False) as conn:
-            conn.execute("DELETE FROM raw_games WHERE duration_seconds < 0")
-        st.success("Dados inválidos removidos.")

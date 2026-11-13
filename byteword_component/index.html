@@ -34,6 +34,20 @@
     position: relative;
   }
 
+  .header-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .game-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    object-fit: cover;
+  }
+
   .game-title {
     font-size: 30px;
     font-weight: 900;
@@ -214,7 +228,10 @@
 
 <div class="game-wrapper">
   <div id="toast" class="toast">Apenas palavras de 5 letras!</div>
-  <div class="game-title">BYTEWORD</div>
+  <div class="header-brand">
+    <img src="logo.png" class="game-logo" alt="ByteWord Logo">
+    <div class="game-title">BYTEWORD</div>
+  </div>
 
   <!-- Board 6x5 -->
   <div class="board" id="board"></div>

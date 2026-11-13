@@ -7,3 +7,8 @@ analytics_dbt/target/
 analytics_dbt/dbt_packages/
 analytics_dbt/logs/
 .DS_Store
+
+# Conteúdos de apresentação e roteiro interno (privados / somente local)
+apresentacao.html
+*apresentacao*
+roteiro*
