@@ -1,143 +1,143 @@
-# ⚡ ByteWord: dbt Core + DuckDB + Streamlit
+# ByteWord: dbt Core + DuckDB + Streamlit
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://byte-word.streamlit.app/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![dbt-core](https://img.shields.io/badge/dbt--core-1.8+-orange.svg)](https://www.getdbt.com/)
 [![DuckDB](https://img.shields.io/badge/DuckDB-1.1+-yellow.svg)](https://duckdb.org/)
 
-> **Acesse a aplicação ao vivo:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
+> **Live Application:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
 
-Uma solução moderna e interativa de Engenharia e Modelagem de Dados de ponta a ponta, desenvolvida para demonstrar o poder e as melhores práticas do ecossistema de **Modern Data Stack** local e em nuvem: **dbt Core**, **DuckDB** e **Streamlit**.
+A modern, end-to-end Data & Analytics Engineering solution demonstrating best practices in the local and cloud **Modern Data Stack**: **dbt Core**, **DuckDB**, and **Streamlit**.
 
 ---
 
-## 🎯 Visão Geral da Arquitetura
+## Architecture Overview
 
-O projeto une gamificação e engenharia analítica corporativa:
-1. **Frontend & Coleta:** Uma aplicação web interativa desenvolvida em **Streamlit** no estilo *ByteWord*, desafiando o usuário a adivinhar palavras técnicas de 5 letras (ex: `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`). Cada palpite e partida é gravado em tempo real no banco colunar local **DuckDB** (`data/byteword.duckdb`).
-2. **Transformação & Governança:** Projeto completo em **dbt Core** orquestrando camadas padronizadas (**Sources**, **Staging**, **Marts**), macros Jinja modulares e testes automatizados de qualidade.
-3. **Consumo & BI:** Painel com Leaderboard (Hall da Fama), métricas analíticas por jogador e análise de dificuldade das palavras, além de linhagem de dados navegável no **dbt docs**.
+The project combines gamification with enterprise analytics engineering:
+1. **Frontend & Event Ingestion:** An interactive web game built with **Streamlit** where players guess 5-letter technical terms (e.g., `QUERY`, `TABLE`, `INDEX`, `SPARK`, `CLOUD`). Every guess and game session is persisted in real time into an embedded **DuckDB** columnar database (`data/byteword.duckdb`).
+2. **Transformation & Governance:** A complete **dbt Core** project orchestrating standardized data layers (**Sources**, **Staging**, **Marts**), reusable Jinja macros, and automated data quality tests.
+3. **BI & Analytics:** An in-app Hall of Fame leaderboard, player performance metrics, term difficulty analysis, and interactive data lineage via **dbt docs**.
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["1. Frontend Interativo (Streamlit)"]
+    subgraph Frontend["1. Interactive Frontend (Streamlit)"]
         UI["app.py (ByteWord Game)"]
     end
 
-    subgraph Storage["2. Banco Analítico Colunar (DuckDB)"]
+    subgraph Storage["2. Columnar Storage (DuckDB)"]
         RawP[("raw_players")]
         RawG[("raw_games")]
         RawGu[("raw_guesses")]
     end
 
-    subgraph dbt["3. Transformação & Governança (dbt Core)"]
-        subgraph Staging["Camada Staging (Views)"]
+    subgraph dbt["3. Transformation & Governance (dbt Core)"]
+        subgraph Staging["Staging Layer (Views)"]
             StgP["stg_players"]
             StgG["stg_games"]
             StgGu["stg_guesses"]
         end
-        subgraph Marts["Camada Marts (Tables)"]
+        subgraph Marts["Marts Layer (Tables)"]
             FctG["fct_games"]
             DimP["dim_players_ranking"]
             DimW["dim_words_difficulty"]
         end
     end
 
-    subgraph BI["4. Visualização & Demonstração"]
-        Leaderboard["Aba Hall da Fama no Streamlit"]
+    subgraph BI["4. Analytics & Consumption"]
+        Leaderboard["Hall of Fame in Streamlit"]
         Docs["dbt docs serve (Lineage DAG)"]
     end
 
-    UI -->|Persiste partidas| Storage
+    UI -->|Persists game sessions| Storage
     Storage -->|Sources| Staging
     Staging -->|ref| Marts
-    Marts -->|Consome dados limpos| Leaderboard
+    Marts -->|Serves clean analytics| Leaderboard
     dbt -.-> Docs
 ```
 
 ---
 
-## 📂 Estrutura do Projeto
+## Project Structure
 
 ```text
 dbt/
-├── app.py                      # Aplicação Streamlit (Jogo + Hall da Fama)
-├── db.py                       # Conexão e gerenciamento DuckDB otimizado para concorrência
-├── words_validator.py          # Validação multilíngue de dicionário (EN e PT-BR)
-├── seed_data.py                # Gerador de partidas sintéticas para inicializar o ambiente
-├── requirements.txt            # Dependências Python
-├── README.md                   # Documentação executiva
+├── app.py                      # Streamlit application (Game + Hall of Fame)
+├── db.py                       # DuckDB connection manager optimized for concurrency
+├── words_validator.py          # Multilingual dictionary validation (EN and PT-BR)
+├── seed_data.py                # Synthetic dataset generator for bootstrapping
+├── requirements.txt            # Python dependencies
+├── README.md                   # Project documentation
 ├── assets/
-│   └── logo.png                # Logo oficial do ByteWord
+│   └── logo.png                # Official ByteWord logo
 ├── data/
-│   ├── byteword.duckdb         # Banco analítico DuckDB compartilhado
-│   └── valid_words.txt         # Dicionário de termos válidos
-├── byteword_component/         # Componente web interativo (tabuleiro e teclado físico/virtual)
-└── analytics_dbt/              # Projeto dbt Core
-    ├── dbt_project.yml         # Configurações do projeto e materializações
-    ├── profiles.yml            # Adapter DuckDB com suporte a variáveis de ambiente
+│   ├── byteword.duckdb         # Embedded DuckDB database
+│   └── valid_words.txt         # Valid 5-letter word dictionary
+├── byteword_component/         # Interactive custom component (board and physical/virtual keyboard)
+└── analytics_dbt/              # dbt Core project
+    ├── dbt_project.yml         # Project configurations and materializations
+    ├── profiles.yml            # DuckDB adapter with environment variable support
     ├── macros/
-    │   └── calculate_score.sql # Macro Jinja com fórmula de pontuação ponderada
+    │   └── calculate_score.sql # Jinja macro implementing weighted scoring formula
     ├── tests/
-    │   └── assert_valid_game_duration.sql # Teste singular customizado (regra anti-cheat)
+    │   └── assert_valid_game_duration.sql # Custom singular test (anti-cheat business rule)
     └── models/
         ├── staging/
-        │   ├── sources.yml     # Declaração das fontes brutas (DuckDB)
-        │   ├── stg_players.sql # Limpeza e padronização de jogadores
-        │   ├── stg_games.sql   # Tipagem e casts de partidas
-        │   ├── stg_guesses.sql # Normalização de palpites
-        │   └── schema.yml      # Testes de integridade (unique, not_null)
+        │   ├── sources.yml     # Raw source declarations (DuckDB)
+        │   ├── stg_players.sql # Player whitespace trimming and standardization
+        │   ├── stg_games.sql   # Game typing, casting, and uppercase normalization
+        │   ├── stg_guesses.sql # Guess attempt normalization
+        │   └── schema.yml      # Contract tests (unique, not_null)
         └── marts/
-            ├── fct_games.sql            # Fato de partidas com score calculado
-            ├── dim_players_ranking.sql  # Dimensão com ranking, win rate e win streaks
-            ├── dim_words_difficulty.sql # Análise de dificuldade dos termos
-            └── schema.yml               # Testes de relacionamentos e accepted_values
+            ├── fct_games.sql            # Fact table with computed score
+            ├── dim_players_ranking.sql  # Player dimension with ranking, win rates & streaks
+            ├── dim_words_difficulty.sql # Word difficulty classification
+            └── schema.yml               # Relationship and accepted_values tests
 ```
 
 ---
 
-## 🚀 Como Executar Localmente
+## How to Run Locally
 
-### 1. Criar o Ambiente Virtual e Instalar Dependências
+### 1. Create Virtual Environment and Install Dependencies
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Popular os Dados Iniciais
-Para que o ambiente inicie já com histórico de partidas e jogadores:
+### 2. Bootstrap Initial Data
+Populate the database with sample game sessions and players:
 ```powershell
 python seed_data.py
 ```
 
-### 3. Compilar e Testar os Modelos dbt
+### 3. Build and Test dbt Models
 ```powershell
 cd analytics_dbt
 dbt build
 cd ..
 ```
 
-### 4. Iniciar a Aplicação Interativa
+### 4. Launch the Interactive Application
 ```powershell
 streamlit run app.py
 ```
 
 ---
 
-## 🌐 Deploy em Produção
+## Production Deployment
 
-A aplicação completa está implantada e disponível publicamente no **Streamlit Community Cloud**:
+The application is fully deployed and accessible via **Streamlit Community Cloud**:
 
-🔗 **URL da Aplicação:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
+🔗 **Live URL:** [https://byte-word.streamlit.app/](https://byte-word.streamlit.app/)
 
-O deploy é sincronizado automaticamente com os commits da branch `main` deste repositório GitHub. Toda a suíte (frontend interativo em Streamlit, persistência colunar DuckDB e transformações dbt Core) roda de ponta a ponta na nuvem com zero custo de infraestrutura.
+Deployments automatically sync with commits pushed to the `main` branch of this GitHub repository. The full stack (interactive Streamlit frontend, DuckDB columnar persistence, and dbt Core transformations) runs seamlessly in the cloud with zero infrastructure overhead.
 
 ---
 
-## 📋 Configuração Recomendada para o GitHub (About)
+## GitHub Repository Configuration (About)
 
-Para configurar o cabeçalho e a barra lateral do repositório no GitHub:
+Settings for the repository header and sidebar:
 
 - **Description:**  
   `Tech game powered by Streamlit, DuckDB, and an end-to-end dbt Core analytical pipeline (ELT, Jinja macros, ranking marts & data quality tests).`
